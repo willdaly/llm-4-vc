@@ -102,3 +102,18 @@ dist
 
 # TernJS port file
 .tern-port
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+venv/
+ENV/
+.venv/
+
+# Backend virtualenv
+backend/.venv/
