@@ -5,6 +5,8 @@ from chromadb.config import Settings
 import os
 import pandas as pd
 from pathlib import Path
+import ollama
+from app.ollama_embeddings import OllamaEmbeddingFunction
 
 app = FastAPI(title="LLM-4-VC Backend", version="1.0.0")
 
@@ -20,6 +22,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Ollama configuration
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
+
 # Initialize ChromaDB client
 chroma_db_path = os.getenv("CHROMA_DB_PATH", "./chroma_db")
 chroma_client = chromadb.PersistentClient(
@@ -27,9 +33,18 @@ chroma_client = chromadb.PersistentClient(
     settings=Settings(anonymized_telemetry=False)
 )
 
-# Create or get a collection
+# Create embedding function
+ollama_ef = OllamaEmbeddingFunction(
+    model_name=OLLAMA_EMBEDDING_MODEL,
+    ollama_base_url=OLLAMA_BASE_URL
+)
+
+# Create or get a collection with Ollama embeddings
 collection_name = "welcome_collection"
-collection = chroma_client.get_or_create_collection(name=collection_name)
+collection = chroma_client.get_or_create_collection(
+    name=collection_name,
+    embedding_function=ollama_ef
+)
 
 
 @app.get("/")
@@ -106,7 +121,10 @@ async def clear_collection():
         # Delete and recreate the collection
         chroma_client.delete_collection(name=collection_name)
         global collection
-        collection = chroma_client.get_or_create_collection(name=collection_name)
+        collection = chroma_client.get_or_create_collection(
+            name=collection_name,
+            embedding_function=ollama_ef
+        )
         return {
             "status": "success",
             "message": "Collection cleared successfully"
@@ -219,4 +237,24 @@ async def list_csv_files():
         return {
             "status": "error",
             "message": str(e)
+        }
+
+
+@app.get("/ollama/status")
+async def ollama_status():
+    """Check Ollama service health and available models"""
+    try:
+        client = ollama.Client(host=OLLAMA_BASE_URL)
+        models = client.list()
+        return {
+            "status": "healthy",
+            "base_url": OLLAMA_BASE_URL,
+            "embedding_model": OLLAMA_EMBEDDING_MODEL,
+            "available_models": [m['name'] for m in models.get('models', [])]
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "base_url": OLLAMA_BASE_URL
         }

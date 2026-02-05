@@ -4,9 +4,10 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies required by ChromaDB
+# Install system dependencies required by ChromaDB and Ollama integration
 RUN apt-get update && apt-get install -y \
     build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file
@@ -20,6 +21,10 @@ COPY ./app ./app
 
 # Copy data directory
 COPY ./data ./data
+
+# Copy scripts directory
+COPY ./scripts ./scripts
+RUN chmod +x /app/scripts/*.sh
 
 # Expose port for FastAPI
 EXPOSE 8000
