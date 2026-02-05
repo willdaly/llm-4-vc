@@ -33,17 +33,29 @@ chroma_client = chromadb.PersistentClient(
     settings=Settings(anonymized_telemetry=False)
 )
 
-# Create embedding function
-ollama_ef = OllamaEmbeddingFunction(
-    model_name=OLLAMA_EMBEDDING_MODEL,
-    ollama_base_url=OLLAMA_BASE_URL
-)
+# Create embedding function (with fallback for production without Ollama)
+USE_OLLAMA = os.getenv("USE_OLLAMA", "true").lower() == "true"
 
-# Create or get a collection with Ollama embeddings
+if USE_OLLAMA:
+    try:
+        ollama_ef = OllamaEmbeddingFunction(
+            model_name=OLLAMA_EMBEDDING_MODEL,
+            ollama_base_url=OLLAMA_BASE_URL
+        )
+        embedding_function = ollama_ef
+        print(f"✓ Using Ollama embeddings: {OLLAMA_EMBEDDING_MODEL}")
+    except Exception as e:
+        print(f"⚠️  Ollama not available: {e}. Falling back to default embeddings.")
+        embedding_function = None
+else:
+    embedding_function = None
+    print("✓ Using default ChromaDB embeddings (Ollama disabled)")
+
+# Create or get a collection
 collection_name = "welcome_collection"
 collection = chroma_client.get_or_create_collection(
     name=collection_name,
-    embedding_function=ollama_ef
+    embedding_function=embedding_function
 )
 
 
@@ -95,7 +107,7 @@ async def add_documents(documents: list[str], ids: list[str], metadatas: list[di
 
 
 @app.get("/chroma/query")
-async def query_documents(query_text: str, n_results: int = 5):
+async def query_documents(query_text: str, n_results: int = 20):
     """Query documents from ChromaDB collection"""
     try:
         results = collection.query(
@@ -123,7 +135,7 @@ async def clear_collection():
         global collection
         collection = chroma_client.get_or_create_collection(
             name=collection_name,
-            embedding_function=ollama_ef
+            embedding_function=embedding_function
         )
         return {
             "status": "success",
