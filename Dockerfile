@@ -11,6 +11,9 @@ COPY package*.json ./
 COPY ./src ./src
 COPY ./public ./public
 
+# Set build-time environment variable for React
+ENV REACT_APP_BACKEND_URL=https://llm-4-vc-backend.onrender.com
+
 # Install node packages, install serve, build the app, and remove dependencies at the end
 RUN npm install \
     && npm install -g serve@latest \
