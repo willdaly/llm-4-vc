@@ -1,5 +1,5 @@
 {
-  "name": "welcome-to-docker",
+  "name": "llm-4-vc",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

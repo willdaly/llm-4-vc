@@ -6,7 +6,7 @@ import os
 import pandas as pd
 from pathlib import Path
 
-app = FastAPI(title="Welcome to Docker Backend", version="1.0.0")
+app = FastAPI(title="LLM-4-VC Backend", version="1.0.0")
 
 # Configure CORS to allow requests from the frontend
 app.add_middleware(

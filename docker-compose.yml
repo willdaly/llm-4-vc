@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    container_name: welcome-frontend
+    container_name: llm-4-vc-frontend
     depends_on:
       - backend
 
@@ -17,7 +17,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    container_name: welcome-backend
+    container_name: llm-4-vc-backend
     volumes:
       - ./backend/app:/app/app
       - ./backend/data:/app/data
