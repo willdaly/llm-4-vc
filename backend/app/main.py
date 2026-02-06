@@ -52,7 +52,7 @@ else:
     print("✓ Using default ChromaDB embeddings (Ollama disabled)")
 
 # Create or get a collection
-collection_name = "welcome_collection"
+collection_name = "mock-data-collection"
 collection = chroma_client.get_or_create_collection(
     name=collection_name,
     embedding_function=embedding_function
